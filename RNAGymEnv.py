@@ -5,31 +5,32 @@ import random
 from copy import deepcopy
 from random import shuffle
 from sklearn.metrics import hamming_loss as norm_hamming
-from utils import single_sites, paired_sites, all_sites_ix, getAllPairings, binaryCodings, generateW, loadCandD
+from utils import all_sites_ix, getAllPairings, binaryCodings, generateW, loadCandD
 import RNA
 from itertools import product
 from distance import hamming as raw_hamming
 
 class RNAEnv(Env):
-    metadata = {'render.modes': ['human']}
-    def __init__(self, target_seq, W, P, U):
-        self.target_seq = list(target_seq)
-        self.single_sites = U
-        self.paired_sites  = P
-        self.paired_loc, self.unpaired_loc = getAllPairings(target_seq)
-        self.designed_seq = deepcopy(self.target_seq)
+    def __init__(self,cfg):
+        self.single_sites = cfg.single_sites
+        self.paired_sites  = cfg.paired_sites
         self.mutation_threshold = 5
-        self.move_locations = self.paired_loc+self.unpaired_loc 
-        self.binary_codes = binaryCodings(single_sites+paired_sites)
+        self.binary_codes = binaryCodings(self.single_sites+self.paired_sites)
         self.current_site = None
         self.coded_state_value = []
-        self.W = W        
-        # Gym interface constraints
-        self.train = loadCandD("train") 
-        self.feature_list = list(generateW(self.move_locations, self.W))
-        self.action_space = Discrete(len(all_sites_ix.keys()))
-        self.observation_space = Box(low = 0,  high = 1, shape=(len(self.feature_list)*4,), dtype = np.int8)
+        self.W = cfg.W     
         self.trackprint = False
+        # Gym interface constraints
+        self.action_space = Discrete(len(all_sites_ix.keys()))
+
+    def reset(self,target_seq):
+        self.target_seq = list(target_seq)
+        self.paired_loc, self.unpaired_loc = getAllPairings(target_seq)
+        self.move_locations = self.paired_loc+self.unpaired_loc 
+        self.designed_seq = deepcopy(self.target_seq)
+        # Gym interface constraints
+        self.feature_list = list(generateW(self.move_locations, self.W))
+        self.observation_space = Box(low = 0,  high = 1, shape=(len(self.feature_list)*4,), dtype = np.int8)
 
     def availableSites(self): return deepcopy(self.move_locations) # copy move location
     
@@ -136,10 +137,6 @@ class RNAEnv(Env):
         hamming_distance = self.hamming_distance(folded_design, target)
         if 0 < hamming_distance <= self.mutation_threshold:
             _ , self.designed_seq = self.localImprovement()
-
-    def reset(self):#to use with gym interface as a standlone
-        self.game = RNAEnv(random.choice(self.train))
-        return self.coded_state_value[-1]
     
     def reward(self):
         if self.hammingLoss() == 0.0:return 1.0
