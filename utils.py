@@ -11,9 +11,12 @@ from torch.optim import AdamW
 #from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 import os
 import numpy as np
+from config import Config
 
-single_sites = ["G","A","U","C"]
-paired_sites = ["GC","CG","AU","UA","UG","GU"]
+CFG = Config()
+
+single_sites = CFG.single_sites
+paired_sites = CFG.paired_sites
 single_sites_ix = {ix:x for ix, x in enumerate(single_sites)}
 paired_sites_ix = {ix:x for ix, x in enumerate(paired_sites)}
 all_sites_ix = {ix:x for ix, x in enumerate(single_sites+paired_sites)}
