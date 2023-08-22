@@ -136,7 +136,7 @@ def process_sequence(seq, cfg, positive_train, negative_train, positive_test, ne
         Env.localSearch()
     return labelStates(cfg, Env, Env.reward(), positive_train, negative_train, positive_test, negative_test)
 
-def Playout(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
+def Playout0(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
     if not os.path.exists(cfg.train_dir):
         os.mkdir(cfg.train_dir)
     tbar = tqdm(range(len(B)))
@@ -156,3 +156,39 @@ def Playout(cfg, B, positive_train, negative_train, positive_test, negative_test
 
     train_loader, valid_loader = load_data(cfg, positive_train, negative_train, positive_test, negative_test)
     return train_loader, valid_loader, positive_train, negative_train, positive_test, negative_test
+
+
+import torch.multiprocessing as mp
+
+def worker(seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model, queue):
+    result = process_sequence(seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model)
+    queue.put(result)
+
+def Playout(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
+    if not os.path.exists(cfg.train_dir):
+        os.mkdir(cfg.train_dir)
+
+    processes = []
+    queue = mp.Queue()
+    for seq in B:
+        p = mp.Process(target=worker, args=(seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model, queue))
+        p.start()
+        processes.append(p)
+
+    seq_id = 0
+    with tqdm(total=len(B), leave=False) as tbar:
+        while seq_id < len(B):
+            tmp_positive_train, tmp_negative_train, tmp_positive_test, tmp_negative_test = queue.get()
+            positive_train.extend(tmp_positive_train)
+            negative_train.extend(tmp_negative_train)
+            positive_test.extend(tmp_positive_test)
+            negative_test.extend(tmp_negative_test)
+            seq_id += 1
+            tbar.set_description(f"BatchPlayout {seq_id}/{len(B)} with pos {len(positive_train)}/ neg {len(negative_train)}")
+
+    for p in processes:
+        p.join()
+
+    train_loader, valid_loader = load_data(cfg, positive_train, negative_train, positive_test, negative_test)
+    return train_loader, valid_loader, positive_train, negative_train, positive_test, negative_test
+
