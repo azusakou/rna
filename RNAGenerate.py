@@ -6,6 +6,7 @@ from os import path
 import os
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+import pdb
 
 def value(model, Env, actions, eval_mode = False):
     '''
@@ -15,13 +16,15 @@ def value(model, Env, actions, eval_mode = False):
     global steps_done
     status = True if len(list(actions[0])) == 2 else False
     action_value, best_action_data  = [], []
-    current_state_value = Env.designedSequence()
+    #pdb.set_trace()
+    current_state_value = Env.designedSequence()#;print(len(current_state_value),current_state_value)
     for a in actions:
         steps_done+=1
         input_sample = Env.code(a)
         input_tensor = torch.tensor(input_sample)
         input_tensor = input_tensor.view(1, 1, input_tensor.size(0),input_tensor.size(1))
-        action_value.append(model.predict(input_tensor))
+        pred_hat = model.predict(input_tensor)
+        action_value.append(pred_hat)
         best_action_data.append(input_sample)
         Env.undoMove(current_state_value)
     assert(current_state_value==Env.designedSequence())
@@ -98,9 +101,9 @@ def load_data(cfg, positive_train, negative_train, positive_test, negative_test)
     valid_loader = DataLoader(CustomDataset(xtest, ytest), batch_size = cfg.batch_size, num_workers = cfg.num_workers)
     return train_loader, valid_loader
 
-def BatchPlayout0(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):#batch playout function
+def BatchPlayout(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):#batch playout function
     if not path.exists(cfg.train_dir):os.mkdir(cfg.train_dir)
-    tbar = tqdm(B)
+    tbar = tqdm(B, leave=False)
     for seq_id, seq in enumerate(tbar):
         if len(list(seq)) > cfg.maxseq_len:continue
         Env.reset(seq)
@@ -136,10 +139,10 @@ def process_sequence(seq, cfg, positive_train, negative_train, positive_test, ne
         Env.localSearch()
     return labelStates(cfg, Env, Env.reward(), positive_train, negative_train, positive_test, negative_test)
 
-def Playout0(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
+def Playout(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
     if not os.path.exists(cfg.train_dir):
         os.mkdir(cfg.train_dir)
-    tbar = tqdm(range(len(B)))
+    tbar = tqdm(range(len(B)), leave=False)
     
     with ProcessPoolExecutor() as executor:
         futures = [executor.submit(process_sequence, seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model) for seq in B]
@@ -164,7 +167,7 @@ def worker(seq, cfg, positive_train, negative_train, positive_test, negative_tes
     result = process_sequence(seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model)
     queue.put(result)
 
-def Playout(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
+def Playout_torch(cfg, B, positive_train, negative_train, positive_test, negative_test, Env, model):
     if not os.path.exists(cfg.train_dir):
         os.mkdir(cfg.train_dir)
 

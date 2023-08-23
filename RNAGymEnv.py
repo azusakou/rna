@@ -9,6 +9,8 @@ from utils import all_sites_ix, getAllPairings, binaryCodings, generateW, loadCa
 import RNA
 from itertools import product
 from distance import hamming as raw_hamming
+import pdb
+
 
 class RNAEnv(Env):
     def __init__(self,cfg):
@@ -19,7 +21,7 @@ class RNAEnv(Env):
         self.current_site = None
         self.coded_state_value = []
         self.W = cfg.W     
-        self.trackprint = False
+        self.trackprint = cfg.trackprint
         # Gym interface constraints
         self.action_space = Discrete(len(all_sites_ix.keys()))
 
@@ -113,6 +115,7 @@ class RNAEnv(Env):
        return "".join(mutated_primary)
  
     def localImprovement(self):
+       if self.trackprint: print("local improvement")
        target = self.getTarget()
        if float(self.hammingLoss()) == 0.0: return 0.0, list(self.getDesigned())
        differing_sites = self.getDiff()
@@ -123,7 +126,7 @@ class RNAEnv(Env):
            hamming_distance = self.hamming_distance(folded_mutated, target)
            hamming_distances[mutated] = hamming_distance
            if hamming_distance==0: 
-               if self.trackprint: print(f"returning the correct fold from local search")
+               if self.trackprint: print(f"returning the correct fold from local search", list(mutated))
                return 0.0, list(mutated)
        res = sorted(hamming_distances.items(), key = lambda x:x[1], reverse = False)
        targetx, distance = res[0]

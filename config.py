@@ -16,14 +16,20 @@ class Config:
     optimizer = "adam"  # Optimizer
     criterion = "mse"  # Loss
     lr = 0.001  # Learning rate
-    log_train = True  # Log train results
-
     # Testing parameters
     test_size = 0.25  # Test size percentage
 
-    # Other parameters
-    num_workers = 1  # Number of workers
+    # RNA parameters
     W = 8  # The feature parameter W
     maxseq_len = 400  # Max sequence length to be designed
     single_sites = ["G","A","U","C"]
     paired_sites = ["GC","CG","AU","UA","UG","GU"]
+    #single_sites = ["Q","W","E","R"]
+    #paired_sites = ["bq","bw","be","br","bt","by"]
+
+    # other parameters
+    trackprint = False
+    num_workers = 1  # Number of workers
+    log_train = True  # Log train results
+    debug = False
+    debug_test = True

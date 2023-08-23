@@ -34,6 +34,8 @@ def seed_everything(seed=42):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
 
+def ps(fname): return str(fname).replace(' ', '_')
+
 def evalArgmax(preds):
     with torch.no_grad():
         out = nn.Softmax(dim=0)(preds)
@@ -74,6 +76,7 @@ def loadValidation():
 def loadCandD(data):
     path = f"data/{data}/*.rna"
     all_files =  glob(path)
+    all_files.sort()
     targets = []
     for _ , r in enumerate(all_files):
         with open(r, "r") as myfile:
@@ -104,7 +107,7 @@ def binaryCodings(seq):
     return binary_codes
 
 def generateW(seq, n):
-    it = iter(seq)
+    it = iter(seq) 
     result = tuple(islice(it, n))
     if len(result) == n:yield result
     for elem in it:

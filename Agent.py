@@ -10,15 +10,16 @@ from tqdm import tqdm
 
 from utils import *
 from RNAGenerate import value
+import pdb
 
-def test(cfg, model, iteration, Env, evaluation_data,track_evaluation):
+def test(cfg, model, iteration, Env, test_data,track_test):
     if not path.exists(cfg.eval_dir):os.mkdir(cfg.eval_dir)
-    data = list(evaluation_data.keys())
+    data = list(test_data.keys())
     dirs = [f"{cfg.eval_dir}{x}/" for x in data]
     for p in dirs:
         if not path.exists(p):os.mkdir(p)
     for d, loc in zip(data, dirs):
-        tbar = tqdm(evaluation_data[d])
+        tbar = tqdm(test_data[d], leave=False)
         for seq_id, seq in enumerate(tbar):
             if len(list(seq)) > cfg.maxseq_len:continue
             Env.reset(seq)
@@ -30,11 +31,11 @@ def test(cfg, model, iteration, Env, evaluation_data,track_evaluation):
                 else:best_action = value(model, Env, cfg.single_sites, True)
             Env.applyMove(best_action)
             if Env.hammingLoss() > 0 : Env.localSearch()
-            if Env.reward() == 1.0 : track_evaluation[d].add(seq_id)
+            if Env.reward() == 1.0 : track_test[d].add(seq_id)
             writeSummary(seq_id, iteration, Env.hammingLoss(), Env.getDesigned(), loc+"summary_"+str(iteration)+".csv")
             tbar.set_description(f"Inference on {d} iteration {iteration} seq {len(list(seq))} ")
-
-        print(f"a check! {d}, {loc} {track_evaluation[d]}")
+        if cfg.debug_test: break
+    return test_data,track_test
     
 def train(train_loader, model, optimizer, scheduler, criterion, epoch, device):
     model.train()
@@ -97,7 +98,7 @@ class Agent():
             tloss = train_dic['vanilla'](self.train_loader, self.model, self.optimizer, self.scheduler, self.criterion, epx, self.device)
             vloss = self.val(epx)
 
-            tbar.set_description(f"Epoch_[{epx + 1}]_[{len(train_loader)}]_[VAL best loss {self.bestloss}]")
+            tbar.set_description(f"Train [Epoch_{epx + 1}][train set_{len(train_loader)}] [VAL best loss {self.bestloss}]")
             tbar.set_postfix({'train_Loss': '{0:1.4f}'.format(tloss),
                               'val_Loss': '{0:1.4f}'.format(vloss),
                               'LR': '{0:1.8f}'.format(self.scheduler.get_last_lr()[0]),
