@@ -62,7 +62,9 @@ def trackEvalResults():
     return track_results
 
 def loadTrain():
-    return loadCandD("train")
+    training_data = loadCandD("train")
+    training_data = sorted(training_data, key=len)
+    return training_data
 
 def loadValidation():
     eval_data = {"datasetC": loadCandD("modena"),
@@ -97,6 +99,16 @@ def loadAandB(data):
             if line.startswith('.') or line.startswith('('):
                 targets.append(line)
     return targets
+
+def pick_samples(cfg, dataset, iteration, n=200, window_size = 3):
+    dataset_size = len(dataset)
+    start_point = iteration if iteration < 25 else iteration ** 2
+    if start_point + window_size*n > dataset_size:
+        start_point = dataset_size - window_size*n
+    end_point = start_point + window_size*n
+    window = dataset[start_point:end_point] 
+    chosen_samples = random.sample(window, n) if iteration < int(cfg.episodes * 0.8) else random.sample(dataset, n)
+    return chosen_samples
 
 def binaryCodings(seq):
     def to_bin(x):return '{0:04b}'.format(x)
