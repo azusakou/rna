@@ -100,7 +100,7 @@ class Agent():
             tloss = train_dic['vanilla'](self.train_loader, self.model, self.optimizer, self.scheduler, self.criterion, epx, self.device)
             vloss = self.val(epx)
 
-            tbar.set_description(f"Train [Epoch_{epx + 1}][train set_{len(train_loader)}]")
+            tbar.set_description(f"Train [Epoch_{epx + 1}][train set_{len(train_loader)}][val set_{len(valid_loader)}]")
             tbar.set_postfix({'train_Loss': '{0:1.4f}'.format(tloss),
                               'val_Loss': '{0:1.4f}'.format(vloss),
                               'LR': '{0:1.8f}'.format(self.scheduler.get_last_lr()[0]),
