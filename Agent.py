@@ -42,6 +42,7 @@ def train(train_loader, model, optimizer, scheduler, criterion, epoch, device):
     total_loss = 0
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         #inputs = inputs.float()
+        #pdb.set_trace()
         inputs, targets = inputs.float().to(device), targets.to(device)
         outputs = model(inputs)
         loss = criterion(outputs, targets)
@@ -52,7 +53,7 @@ def train(train_loader, model, optimizer, scheduler, criterion, epoch, device):
             grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 500)
             optimizer.step()
             optimizer.zero_grad()
-            scheduler.step()
+            if epoch % 20 == 0: scheduler.step()
     return total_loss/(batch_idx+1)
 
 class Agent():
@@ -62,7 +63,7 @@ class Agent():
         self.model = model.to(self.device)
         self.epochs = cfg.mx_epochs
         self.optimizer = self.get_optimizer(cfg.optimizer, cfg.lr)
-        self.scheduler = StepLR(self.optimizer, step_size=30, gamma=0.1)
+        self.scheduler = StepLR(self.optimizer, step_size=300, gamma=0.9)
         self.criterion = self.get_loss(cfg.criterion)
         self.regression = True
         self.bestloss = math.inf
@@ -89,6 +90,7 @@ class Agent():
         return self.model(x).item()
 
     def update(self, train_loader, valid_loader):
+        self.bestloss = math.inf
         train_dic = {'vanilla': train,
                     }        
         self.train_loader = train_loader
@@ -98,7 +100,7 @@ class Agent():
             tloss = train_dic['vanilla'](self.train_loader, self.model, self.optimizer, self.scheduler, self.criterion, epx, self.device)
             vloss = self.val(epx)
 
-            tbar.set_description(f"Train [Epoch_{epx + 1}][train set_{len(train_loader)}] [VAL best loss {self.bestloss}]")
+            tbar.set_description(f"Train [Epoch_{epx + 1}][train set_{len(train_loader)}]")
             tbar.set_postfix({'train_Loss': '{0:1.4f}'.format(tloss),
                               'val_Loss': '{0:1.4f}'.format(vloss),
                               'LR': '{0:1.8f}'.format(self.scheduler.get_last_lr()[0]),

@@ -17,7 +17,7 @@ class Config:
     criterion = "mse"  # Loss
     lr = 0.001  # Learning rate
     # Testing parameters
-    test_size = 0.25  # Test size percentage
+    test_size = 0.1  # Test size percentage
 
     # RNA parameters
     W = 8  # The feature parameter W

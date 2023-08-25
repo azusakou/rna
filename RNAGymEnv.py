@@ -18,8 +18,6 @@ class RNAEnv(Env):
         self.paired_sites  = cfg.paired_sites
         self.mutation_threshold = 5
         self.binary_codes = binaryCodings(self.single_sites+self.paired_sites)
-        self.current_site = None
-        self.coded_state_value = []
         self.W = cfg.W     
         self.trackprint = cfg.trackprint
         # Gym interface constraints
@@ -33,7 +31,9 @@ class RNAEnv(Env):
         # Gym interface constraints
         self.feature_list = list(generateW(self.move_locations, self.W))
         self.observation_space = Box(low = 0,  high = 1, shape=(len(self.feature_list)*4,), dtype = np.int8)
-
+        self.coded_state_value = []
+        self.current_site = None
+        
     def availableSites(self): return deepcopy(self.move_locations) # copy move location
     
     def designedSequence(self): return deepcopy(self.designed_seq) # copy design seq
@@ -58,6 +58,9 @@ class RNAEnv(Env):
         self.designed_seq = seq
 
     def step(self, action):#can be used as Gym interface standalone
+        '''
+        replace with the action in original (like .().)
+        '''
         if self.currentPaired():          
             move_loc_x, move_loc_y = self.current_site
             base_tox, base_toy  = action
@@ -82,7 +85,7 @@ class RNAEnv(Env):
             for location in feature:
                 if isinstance(location, int):
                     charx = self.designed_seq[location]
-                    if charx == ".": X.extend(list(binary_codes['unknown_single']))#unknown single              
+                    if charx == ".": X.extend(list(binary_codes['unknown_single'])) #unknown single              
                     else:X.extend(list(binary_codes[charx])) #known single
                 else:
                     locx, locy = location

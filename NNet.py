@@ -3,7 +3,6 @@ import torch.nn as nn
 class RnaNet(nn.Module):
     def __init__(self):
         super().__init__()
-        #self.conv_layer1 = nn.Conv2d(1,64, kernel_size=(4, 1))
         self.conv_layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=4)
         self.bn1 = nn.BatchNorm2d(64)
         self.conv_layer2 = nn.Conv2d(in_channels=64,out_channels=128, kernel_size=4)

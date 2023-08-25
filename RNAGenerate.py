@@ -39,7 +39,7 @@ def trainOrtest(cfg):
     if random.random() < float(cfg.test_size) : return True
     return False
 
-def labelStates(cfg, Env, reward, positive_train, negative_train, positive_test, negative_test):
+def labelStates0(cfg, Env, reward, positive_train, negative_train, positive_test, negative_test):
     '''
     generate features and labels
     '''
@@ -61,12 +61,36 @@ def labelStates(cfg, Env, reward, positive_train, negative_train, positive_test,
                     negative_test.append([input_tensor, torch.tensor([-1.0])])  
     return positive_train, negative_train, positive_test, negative_test
 
+def labelStates(cfg, Env, reward, positive_train, negative_train, positive_test, negative_test):
+    '''
+    generate features and labels
+    '''
+    if reward==1:
+        if not trainOrtest(cfg):
+            for input_tensor in Env.coded_state_value:
+                if len(positive_train) >= cfg.replay_size:positive_train.popleft()
+                positive_train.append([input_tensor, torch.tensor([1.0])])
+        else:
+            for input_tensor in Env.coded_state_value:
+                if len(positive_test) >= cfg.replay_size:positive_test.popleft()
+                positive_test.append([input_tensor, torch.tensor([1.0])])
+    else:
+        if not trainOrtest(cfg):
+            for input_tensor in Env.coded_state_value:
+                if len(negative_train) >= cfg.replay_size:negative_train.popleft()
+                negative_train.append([input_tensor, torch.tensor([-1.0])])
+        else:
+            for input_tensor in Env.coded_state_value:
+                if len(negative_test) >= cfg.replay_size:negative_test.popleft()
+                negative_test.append([input_tensor, torch.tensor([-1.0])])  
+    return positive_train, negative_train, positive_test, negative_test
+
 def sampleReplay(positive, negative, sample_sz):
     if len(positive) >= sample_sz:
         neg_sample_train = random.sample(negative, sample_sz)
         pos_sample_train = random.sample(positive, sample_sz)
     elif len(positive) == 0: #if there is no positive yet
-        sample_sz = 10
+        sample_sz = 5
         neg_sample_train = random.sample(negative, sample_sz)
         pos_sample_train = []
     else:
@@ -78,6 +102,7 @@ def sampleReplay(positive, negative, sample_sz):
     for d in pos_sample_train+neg_sample_train:
         X.append(d[0])
         y.append(d[1])        
+
     X = pad_sequence(X, padding_value=-1) # batching the workload
     X = X.view(X.size(1),1,X.size(0),X.size(2))
     y = torch.cat(y).view(-1, 1)
@@ -117,9 +142,9 @@ def BatchPlayout(cfg, B, positive_train, negative_train, positive_test, negative
         if Env.hammingLoss() > 0 : Env.localSearch()
         positive_train, negative_train, positive_test, negative_test = labelStates(cfg, Env, Env.reward(), 
                                                                                    positive_train, negative_train, positive_test, negative_test)
-        
-        train_loader, valid_loader = load_data(cfg, positive_train, negative_train, positive_test, negative_test)
+
         tbar.set_description(f"BatchPlayout {seq_id}/{len(B)} with pos {len(positive_train)}/ neg {len(negative_train)}")
+    train_loader, valid_loader = load_data(cfg, positive_train, negative_train, positive_test, negative_test)
     return train_loader, valid_loader, positive_train, negative_train, positive_test, negative_test
 
 def process_sequence(seq, cfg, positive_train, negative_train, positive_test, negative_test, Env, model):

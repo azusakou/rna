@@ -22,8 +22,8 @@ paired_sites_ix = {ix:x for ix, x in enumerate(paired_sites)}
 all_sites_ix = {ix:x for ix, x in enumerate(single_sites+paired_sites)}
 
 EPS_START = 0.97
-EPS_END = 0.03
-EPS_DECAY = 5000
+EPS_END = 0.1
+EPS_DECAY = 10000
 steps_done = 0
 
 def seed_everything(seed=42):
@@ -108,6 +108,28 @@ def pick_samples(cfg, dataset, iteration, n=200, window_size = 3):
     end_point = start_point + window_size*n
     window = dataset[start_point:end_point] 
     chosen_samples = random.sample(window, n) if iteration < int(cfg.episodes * 0.8) else random.sample(dataset, n)
+    return chosen_samples
+
+def pick_samples_c(cfg, dataset, iteration, n=200, window_size=3):
+    dataset_size = len(dataset)
+    start_point = iteration if iteration < 25 else iteration ** 2
+    if start_point + window_size * n > dataset_size:
+        start_point = dataset_size - window_size * n
+    end_point = start_point + window_size * n
+    window = dataset[start_point:end_point]
+    
+    # Calculate 80% and 20% of n
+    n_90_percent = int(n * 0.9)
+    n_10_percent = n - n_90_percent
+    
+    # If iteration is less than 80% of episodes, pick 80% from window and 20% from dataset
+    if iteration < int(cfg.episodes * 0.8):
+        chosen_samples_window = random.sample(window, n_90_percent)
+        chosen_samples_dataset = random.sample(dataset, n_10_percent)
+        chosen_samples = chosen_samples_window + chosen_samples_dataset
+    else:
+        chosen_samples = random.sample(dataset, n)
+
     return chosen_samples
 
 def binaryCodings(seq):
