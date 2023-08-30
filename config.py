@@ -10,8 +10,8 @@ class Config:
     mx_epochs = 30  # Max epochs to play
     batch_size = 64  # Batch size
     replay_size = 100000  # Replay memory size
-    sample_train = 20000  # Replay sample size to train on
-    sample_test = 20000  # Replay sample size to test on
+    sample_train = 10000  # Replay sample size to train on
+    sample_test = 10000  # Replay sample size to test on
     batch_playout_size = 10  # Batch size for the playout
     optimizer = "adam"  # Optimizer
     criterion = "mse"  # Loss

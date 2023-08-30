@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
             #if len(pos_train) > -1 and (len(pos_train) > pos_train_len): 
             agent.update(train_loader, valid_loader);pos_train_len = len(pos_train)
-            if iteration%30 == 0 or (iteration+1) == CFG.episodes:
+            if (iteration+1)%30 == 0 or (iteration+1) == CFG.episodes:
                 test_data,track_test = test(CFG, agent, iteration, environment, test_data, track_test)
                 logSummaries(iteration, track_test, test_data)
         
