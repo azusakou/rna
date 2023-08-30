@@ -29,7 +29,7 @@ def test(cfg, model, iteration, Env, test_data,track_test):
                 Env.current_site = s
                 if Env.currentPaired():best_action = value(model, Env, cfg.paired_sites, True)
                 else:best_action = value(model, Env, cfg.single_sites, True)
-            Env.applyMove(best_action)
+                Env.applyMove(best_action)
             if Env.hammingLoss() > 0 : Env.localSearch()
             if Env.reward() == 1.0 : track_test[d].add(seq_id)
             writeSummary(seq_id, iteration, Env.hammingLoss(), Env.getDesigned(), loc+"summary_"+str(iteration)+".csv")
