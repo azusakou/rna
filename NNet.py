@@ -41,7 +41,7 @@ class RnaNet(nn.Module):
         self.conv_layer3 = nn.Conv2d(in_channels=64,out_channels=128, kernel_size=4)
         self.pool = nn.AdaptiveAvgPool2d((2,2))
         self.flatten_layer = nn.Flatten()
-        self.linear_layer1 = nn.Linear(512,128)
+        self.linear_layer1 = nn.Linear(512,256)
         self.dropout = nn.Dropout(0.2)
         self.linear_layer2 = nn.Linear(256, 64)
         self.linear_layer3 = nn.Linear(64, 32)
