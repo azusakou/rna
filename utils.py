@@ -132,13 +132,20 @@ def pick_samples_c(cfg, dataset, iteration, n=200, window_size=3):
 
     return chosen_samples
 
-def binaryCodings(seq):
+def binaryCodings0(seq):
     def to_bin(x):return '{0:04b}'.format(x)
     binary_codes = dict()
     for ix, x in enumerate(seq) : binary_codes[seq[ix]] = to_bin(ix)
     binary_codes['unknown_pair'] = to_bin(10)
     binary_codes['unknown_single'] = to_bin(11)
     return binary_codes
+
+def binaryCodings(seq):
+    def to_str(x): return '{:02}'.format(x)
+    integer_codes = {x: to_str(ix + 10) for ix, x in enumerate(seq)}
+    integer_codes['unknown_pair'] = to_str(len(seq) + 10)
+    integer_codes['unknown_single'] = to_str(len(seq) + 11)
+    return integer_codes
 
 def generateW(seq, n):
     it = iter(seq) 
