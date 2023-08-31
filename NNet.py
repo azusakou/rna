@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-class RnaNet(nn.Module):
+class RnaNet0(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv_layer1 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=4)
@@ -29,6 +29,36 @@ class RnaNet(nn.Module):
         x = self.relu(self.linear_layer1(x))
         x = self.dropout(self.relu(self.linear_layer2(x)))
         x = self.relu(self.linear_layer3(x))
+        x = self.linear_layer4(x)
+        x = self.tanh(x)
+        return x
+    
+class RnaNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv_layer1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=4)
+        self.conv_layer2 = nn.Conv2d(in_channels=32,out_channels=64, kernel_size=4)
+        self.conv_layer3 = nn.Conv2d(in_channels=64,out_channels=128, kernel_size=4)
+        self.pool = nn.AdaptiveAvgPool2d((2,2))
+        self.flatten_layer = nn.Flatten()
+        self.linear_layer1 = nn.Linear(512,128)
+        self.dropout = nn.Dropout(0.2)
+        self.linear_layer2 = nn.Linear(256, 64)
+        self.linear_layer3 = nn.Linear(64, 32)
+        self.linear_layer4 = nn.Linear(32, 1)
+
+        self.tanh = nn.Tanh()
+    
+    def forward(self, x):
+        x = x.float()
+        x = self.conv_layer1(x)#;print('layer1',x.size())
+        x = self.conv_layer2(x)#;print('layer2',x.size())
+        x = self.conv_layer3(x)
+        x = self.pool(x)
+        x = self.flatten_layer(x)
+        x = self.linear_layer1(x)
+        x = self.linear_layer2(x)
+        x = self.linear_layer3(x)
         x = self.linear_layer4(x)
         x = self.tanh(x)
         return x
